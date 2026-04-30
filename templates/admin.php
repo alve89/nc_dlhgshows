@@ -1,6 +1,7 @@
 <?php
 /** @var array $_ */
-\OCP\Util::addStyle('dlhgshows', 'main');
+\OCP\Util::addStyle('dlhgshows', 'admin');
+\OCP\Util::addScript('dlhgshows', 'dlhgshows-admin');
 
 \OCP\Util::addScript('core', 'select2');
 \OCP\Util::addStyle('core', 'select2');
@@ -26,7 +27,6 @@ $requestToken = \OCP\Util::callRegister();
             placeholder: 'Gruppen auswählen…',
             allowClear: true,
         });
-        // Select2 mit width:'off' setzt kein inline-style – CSS übernimmt vollständig.
     }
     if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', initSelect2);
@@ -69,6 +69,7 @@ $requestToken = \OCP\Util::callRegister();
         <div class="hw-settings-row">
             <button type="submit" class="hw-settings-btn">Speichern</button>
         </div>
+        <div id="hw-settings-message" class="hw-settings-message" style="display:none;"></div>
     </form>
 
 </div>
