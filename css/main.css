@@ -262,6 +262,24 @@
     font-weight: 600;
 }
 
+/* Absage: gesamte Zeile ausgegraut */
+tr[data-type="absage"] .hw-td {
+    color: #aaaaaa !important;
+}
+
+/* Absage: Buttons deaktiviert */
+tr[data-type="absage"] .hw-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: #aaaaaa;
+    color: #aaaaaa;
+}
+
+/* Tooltip-Cursor auf dem Wrapper, da pointer-events:none den title-Tooltip am Button blockieren würde */
+tr[data-type="absage"] .hw-rsvp-btn-wrap {
+    cursor: help;
+}
+
 .hw-legend {
     display: flex;
     gap: 24px;
@@ -429,13 +447,3 @@
     }
 
 }
-
-
-
-
-
-
-
-
-
-

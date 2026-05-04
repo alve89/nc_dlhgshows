@@ -112,20 +112,20 @@ $requestToken = \OCP\Util::callRegister();
                                         <?php p($ev['description'] ?: '—'); ?>
                                     </td>
 <td class="hw-td hw-td-rsvp" data-label="Zu-/Absage">
-    <div class="hw-rsvp-btn-wrap">
+    <div class="hw-rsvp-btn-wrap"<?php if ($rowType === 'absage') echo ' title="Dieser Auftritt wurde abgesagt und steht nicht mehr zur Abstimmung."'; ?>>
         <form method="post" action="<?php p($submitUrl); ?>" class="hw-rsvp-form">
             <input type="hidden" name="requesttoken"       value="<?php p($requestToken); ?>">
             <input type="hidden" name="calendarobject_id"  value="<?php p($objId); ?>">
             <input type="hidden" name="calendarobject_uid" value="<?php p($objUid); ?>">
             <input type="hidden" name="response"           value="accepted">
-            <button type="submit" class="hw-btn hw-btn-accept <?php if ($current === 'accepted') echo 'hw-btn-active'; ?>">✓</button>
+            <button type="submit" class="hw-btn hw-btn-accept <?php if ($current === 'accepted') echo 'hw-btn-active'; ?>"<?php if ($rowType === 'absage') echo ' disabled'; ?>>✓</button>
         </form>
         <form method="post" action="<?php p($submitUrl); ?>" class="hw-rsvp-form">
             <input type="hidden" name="requesttoken"       value="<?php p($requestToken); ?>">
             <input type="hidden" name="calendarobject_id"  value="<?php p($objId); ?>">
             <input type="hidden" name="calendarobject_uid" value="<?php p($objUid); ?>">
             <input type="hidden" name="response"           value="declined">
-            <button type="submit" class="hw-btn hw-btn-decline <?php if ($current === 'declined') echo 'hw-btn-active'; ?>">✗</button>
+            <button type="submit" class="hw-btn hw-btn-decline <?php if ($current === 'declined') echo 'hw-btn-active'; ?>"<?php if ($rowType === 'absage') echo ' disabled'; ?>>✗</button>
         </form>
     </div>
     <div class="hw-rsvp-count" style="display:none;">
