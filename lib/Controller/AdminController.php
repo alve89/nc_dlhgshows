@@ -22,11 +22,15 @@ class AdminController extends Controller {
 
     #[AuthorizedAdminSetting(settings: \OCA\Dlhgshows\Settings\Admin::class)]
     public function save(): DataResponse {
-        $calendarId   = (int)$this->request->getParam('calendar_id');
-        $calendarName = (string)$this->request->getParam('calendar_name');
-        $statsGroups  = $this->request->getParam('stats_groups');
+        $calendarId    = (int)$this->request->getParam('calendar_id');
+        $calendarName  = (string)$this->request->getParam('calendar_name');
+        $statsGroups   = $this->request->getParam('stats_groups');
+        $membersGroups = $this->request->getParam('members_groups');
         if (!is_array($statsGroups)) {
             $statsGroups = $statsGroups !== null ? [$statsGroups] : [];
+        }
+        if (!is_array($membersGroups)) {
+            $membersGroups = $membersGroups !== null ? [$membersGroups] : [];
         }
 
         if ($calendarId > 0) {
@@ -35,7 +39,8 @@ class AdminController extends Controller {
         if ($calendarName !== '') {
             $this->appConfig->setValueString(Application::APP_ID, 'calendar_name', $calendarName);
         }
-        $this->appConfig->setValueString(Application::APP_ID, 'stats_groups', json_encode(array_values($statsGroups)));
+        $this->appConfig->setValueString(Application::APP_ID, 'stats_groups',   json_encode(array_values($statsGroups)));
+        $this->appConfig->setValueString(Application::APP_ID, 'members_groups', json_encode(array_values($membersGroups)));
 
         return new DataResponse(['status' => 'ok']);
     }

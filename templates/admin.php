@@ -6,12 +6,13 @@
 \OCP\Util::addScript('core', 'select2');
 \OCP\Util::addStyle('core', 'select2');
 
-$events       = $_['events'];
-$calendarName = $_['calendarName'];
-$totals       = $_['totals'];
-$calendarId   = $_['calendarId'];
-$statsGroups  = $_['statsGroups'] ?? [];
-$groups       = $_['groups'] ?? [];
+$events        = $_['events'];
+$calendarName  = $_['calendarName'];
+$totals        = $_['totals'];
+$calendarId    = $_['calendarId'];
+$statsGroups   = $_['statsGroups']  ?? [];
+$membersGroups = $_['membersGroups'] ?? [];
+$groups        = $_['groups']       ?? [];
 
 $saveUrl      = \OC::$server->getURLGenerator()->linkToRoute('dlhgshows.admin.save');
 $requestToken = \OCP\Util::callRegister();
@@ -20,11 +21,15 @@ $requestToken = \OCP\Util::callRegister();
 <script nonce="<?php p(\OC::$server->getContentSecurityPolicyNonceManager()->getNonce()); ?>">
 (function () {
     function initSelect2() {
-        var el = document.getElementById('stats_groups');
-        if (!el || typeof jQuery === 'undefined') return;
+        if (typeof jQuery === 'undefined') return;
         jQuery('#stats_groups').select2({
             width: 'off',
             placeholder: 'Gruppen auswählen…',
+            allowClear: true,
+        });
+        jQuery('#members_groups').select2({
+            width: 'off',
+            placeholder: 'Gruppe auswählen…',
             allowClear: true,
         });
     }
@@ -61,6 +66,18 @@ $requestToken = \OCP\Util::callRegister();
                 <?php foreach ($groups as $group): ?>
                     <option value="<?php p($group['id']); ?>"
                         <?php if (in_array($group['id'], $statsGroups, true)) echo 'selected'; ?>>
+                        <?php p($group['displayName']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
+        </div>
+        <div class="hw-settings-row hw-settings-row-multiselect">
+            <label for="members_groups">Mitgliedergruppe (Auswertung)</label>
+            <select id="members_groups" name="members_groups[]"
+                    class="hw-settings-select2" multiple>
+                <?php foreach ($groups as $group): ?>
+                    <option value="<?php p($group['id']); ?>"
+                        <?php if (in_array($group['id'], $membersGroups, true)) echo 'selected'; ?>>
                         <?php p($group['displayName']); ?>
                     </option>
                 <?php endforeach; ?>

@@ -28,10 +28,12 @@ class Admin implements ISettings {
         $user   = $this->userSession->getUser();
         $userId = $user ? $user->getUID() : '';
 
-        $calendarId    = $this->appConfig->getValueInt(Application::APP_ID, 'calendar_id', 33);
-        $calendarName  = $this->appConfig->getValueString(Application::APP_ID, 'calendar_name', 'Teamkalender');
-        $statsGroupRaw = $this->appConfig->getValueString(Application::APP_ID, 'stats_groups', '');
-        $statsGroups   = $statsGroupRaw !== '' ? json_decode($statsGroupRaw, true) ?? [] : [];
+        $calendarId      = $this->appConfig->getValueInt(Application::APP_ID, 'calendar_id', 33);
+        $calendarName    = $this->appConfig->getValueString(Application::APP_ID, 'calendar_name', 'Teamkalender');
+        $statsGroupRaw   = $this->appConfig->getValueString(Application::APP_ID, 'stats_groups', '');
+        $statsGroups     = $statsGroupRaw !== '' ? json_decode($statsGroupRaw, true) ?? [] : [];
+        $membersGroupRaw = $this->appConfig->getValueString(Application::APP_ID, 'members_groups', '');
+        $membersGroups   = $membersGroupRaw !== '' ? json_decode($membersGroupRaw, true) ?? [] : [];
 
         // Alle Gruppen laden
         $groups = [];
@@ -47,12 +49,13 @@ class Admin implements ISettings {
         $totals = $this->rsvpService->getTotalsPerEvent();
 
         return new TemplateResponse(Application::APP_ID, 'admin', [
-            'calendarName' => $calendarName,
-            'events'       => $events,
-            'totals'       => $totals,
-            'calendarId'   => $calendarId,
-            'statsGroups'  => $statsGroups,
-            'groups'       => $groups,
+            'calendarName'  => $calendarName,
+            'events'        => $events,
+            'totals'        => $totals,
+            'calendarId'    => $calendarId,
+            'statsGroups'   => $statsGroups,
+            'membersGroups' => $membersGroups,
+            'groups'        => $groups,
         ], 'blank');
     }
 

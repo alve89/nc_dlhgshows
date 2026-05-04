@@ -108,6 +108,30 @@ class RsvpService {
         return $totals;
     }
 
+    /**
+     * Gibt je calendarobject_id die user_ids aufgeschlüsselt nach Response zurück.
+     * [ calendarobject_id => ['accepted' => ['user1','user2'], 'declined' => ['user3']] ]
+     */
+    public function getUsersPerEvent(): array {
+        $qb = $this->db->getQueryBuilder();
+        $qb->select('calendarobject_id', 'user_id', 'response')
+           ->from(self::TABLE)
+           ->orderBy('calendarobject_id')
+           ->addOrderBy('response');
+
+        $result = $qb->executeQuery();
+        $users  = [];
+        while ($row = $result->fetch()) {
+            $id = (int)$row['calendarobject_id'];
+            if (!isset($users[$id])) {
+                $users[$id] = ['accepted' => [], 'declined' => []];
+            }
+            $users[$id][$row['response']][] = $row['user_id'];
+        }
+        $result->closeCursor();
+        return $users;
+    }
+
 
 
 

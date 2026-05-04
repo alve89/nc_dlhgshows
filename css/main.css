@@ -262,24 +262,6 @@
     font-weight: 600;
 }
 
-/* Absage: gesamte Zeile ausgegraut */
-tr[data-type="absage"] .hw-td {
-    color: #aaaaaa !important;
-}
-
-/* Absage: Buttons deaktiviert */
-tr[data-type="absage"] .hw-btn:disabled {
-    opacity: 0.35;
-    cursor: not-allowed;
-    border-color: #aaaaaa;
-    color: #aaaaaa;
-}
-
-/* Tooltip-Cursor auf dem Wrapper, da pointer-events:none den title-Tooltip am Button blockieren würde */
-tr[data-type="absage"] .hw-rsvp-btn-wrap {
-    cursor: help;
-}
-
 .hw-legend {
     display: flex;
     gap: 24px;
@@ -446,4 +428,180 @@ tr[data-type="absage"] .hw-rsvp-btn-wrap {
         gap: 8px;
     }
 
+}
+
+/* ── Layout: Tabelle + Sidebar ─────────────────────────────────────────── */
+
+.hw-main-wrap {
+    display: flex;
+    flex-direction: row;
+    align-items: stretch;
+    width: 100%;
+}
+
+.hw-main-wrap .hw-table-wrap {
+    flex: 1;
+    min-width: 0;
+}
+
+.hw-table-scroll {
+    overflow-x: auto;
+}
+
+/* ── Sidebar im Nextcloud-Stil ─────────────────────────────────────────── */
+
+.hw-sidebar.app-sidebar {
+    width: 27vw;
+    max-width: 360px;
+    min-width: 200px;
+    flex-shrink: 0;
+    align-self: stretch;
+    overflow-y: auto;
+
+    background: var(--color-main-background);
+    border-left: 1px solid var(--color-border);
+    box-shadow: -2px 0 4px rgba(0,0,0,.05);
+
+    display: flex;
+    flex-direction: column;
+}
+
+.hw-sidebar .app-sidebar-header {
+    padding: 20px 20px 12px;
+    border-bottom: 1px solid var(--color-border);
+    flex-shrink: 0;
+}
+
+.hw-sidebar .app-sidebar-header__mainname {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--color-main-text);
+    margin: 0;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.hw-sidebar .app-sidebar-tabs {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.hw-sidebar .app-sidebar-tabs__content {
+    flex: 1;
+    overflow-y: auto;
+}
+
+.hw-sidebar .app-sidebar__tab {
+    padding: 16px 20px;
+    font-size: 0.875rem;
+    color: var(--color-main-text);
+}
+
+/* ── Sidebar Auswertungs-Struktur ──────────────────────────────────────── */
+
+.hw-stats-top {
+    display: flex;
+    flex-direction: row;
+    gap: 0;
+}
+
+.hw-stats-col {
+    flex: 1;
+    padding: 0 8px;
+}
+
+.hw-stats-col:first-child {
+    padding-left: 0;
+    border-right: 1px solid var(--color-border);
+}
+
+.hw-stats-col:last-child {
+    padding-right: 0;
+}
+
+.hw-stats-heading {
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--color-text-maxcontrast);
+    margin: 0 0 8px 0;
+}
+
+.hw-stats-divider {
+    border: none;
+    border-top: 1px solid var(--color-border);
+    margin: 16px 0;
+}
+
+.hw-stats-bottom {
+    padding: 0;
+}
+
+/* ── Avatar-Chips ──────────────────────────────────────────────────────── */
+
+.hw-stats-avatars {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    min-height: 28px;
+}
+
+.hw-avatar {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: var(--color-primary-element);
+    color: var(--color-primary-element-text);
+    font-size: 0.7rem;
+    font-weight: 700;
+    cursor: default;
+    flex-shrink: 0;
+}
+
+.hw-avatar-empty {
+    color: var(--color-text-maxcontrast);
+    font-size: 0.875rem;
+}
+
+/* ── Aktive Zeile ──────────────────────────────────────────────────────── */
+
+.hw-tr--active {
+    background: var(--color-primary-element-light) !important;
+    outline: 2px solid var(--color-primary-element);
+    outline-offset: -2px;
+}
+
+.hw-tr {
+    cursor: pointer;
+}
+
+/* Sidebar nur auf Desktop */
+@media (max-width: 768px) {
+    .hw-sidebar {
+        display: none !important;
+    }
+}
+
+/* ── Absage-Zeilen ─────────────────────────────────────────────────────── */
+
+tr[data-type="absage"] .hw-td {
+    color: #aaaaaa !important;
+}
+
+tr[data-type="absage"] .hw-btn:disabled {
+    opacity: 0.35;
+    cursor: not-allowed;
+    border-color: #aaaaaa;
+    color: #aaaaaa;
+}
+
+tr[data-type="absage"] .hw-rsvp-btn-wrap {
+    cursor: help;
 }
