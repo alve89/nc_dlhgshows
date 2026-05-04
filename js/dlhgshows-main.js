@@ -99,7 +99,7 @@ setTimeout(function () {
     }
 
     // ── Legende Filter ──────────────────────────────────────────────────────
-    var hidden = { auftritt: false, anfrage: false, absage: false };
+    var hidden = { auftritt: false, anfrage: false, absage: true };
     var statsActive = false;
 
     document.querySelectorAll('.hw-legend-item').forEach(function (item) {
@@ -148,8 +148,12 @@ setTimeout(function () {
                 dot.classList.remove('hw-legend-dot-empty');
             }
             document.querySelectorAll('tr[data-type="' + type + '"]').forEach(function (row) {
-                row.style.display = hidden[type] ? 'none' : '';
+                row.style.display = hidden[type] ? 'none' : 'table-row';
             });
         });
     });
+
+    // Legende-Dot für Absage beim Laden als inaktiv markieren
+    var absageDot = document.querySelector('.hw-legend-item[data-type="absage"] .hw-legend-dot');
+    if (absageDot) { absageDot.classList.add('hw-legend-dot-empty'); }
 });

@@ -106,6 +106,8 @@
 
 /* ── Absage-Zeilen ─────────────────────────────────────────────────────── */
 
+tr[data-type="absage"] { display: none; }
+
 tr[data-type="absage"] .hw-td {
     color: #aaaaaa !important;
 }

@@ -184,7 +184,6 @@ var hwUsersPerEvent = <?php echo json_encode($usersPerEvent); ?>;
                     </div><!-- /.hw-table-scroll -->
 
                     <div class="hw-footer">
-                        <?php count($events) > 1 ? p(count($events)) . p(' Einträge') : p(count($events)) . p(' Eintrag') ?>
                     </div>
                 </div><!-- /.hw-table-wrap -->
 
