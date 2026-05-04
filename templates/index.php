@@ -18,6 +18,31 @@ $nonce = \OC::$server->getContentSecurityPolicyNonceManager()->getNonce();
 <script nonce="<?php p($nonce); ?>">
 var hwAllUsers      = <?php echo json_encode($allUserIds); ?>;
 var hwUsersPerEvent = <?php echo json_encode($usersPerEvent); ?>;
+
+// ── Session Tracking ────────────────────────────────────────────────────────
+(function() {
+    // Generiere oder hole eine eindeutige Session-ID aus sessionStorage
+    let sessionId = sessionStorage.getItem('hwSessionId');
+    if (!sessionId) {
+        sessionId = 'session_' + Math.random().toString(36).substr(2, 9) + '_' + Date.now();
+        sessionStorage.setItem('hwSessionId', sessionId);
+    }
+
+    // Sende die Session-ID an den Server (nur einmal pro Session)
+    if (!sessionStorage.getItem('hwSessionTracked')) {
+        fetch(OC.generateUrl('/apps/dlhgshows/api/tracking/session'), {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-Token': document.querySelector('head[data-requesttoken]')?.dataset?.requesttoken || '',
+            },
+            body: JSON.stringify({ session_id: sessionId }),
+        }).catch(() => {
+            // Fehler stillschweigend ignorieren
+        });
+        sessionStorage.setItem('hwSessionTracked', 'true');
+    }
+})();
 </script>
 
 <div id="app">
@@ -122,6 +147,14 @@ var hwUsersPerEvent = <?php echo json_encode($usersPerEvent); ?>;
                                     </td>
 <td class="hw-td hw-td-rsvp" data-label="Zu-/Absage">
     <div class="hw-rsvp-btn-wrap">
+        <?php if ($rowType === 'absage'): ?>
+        <span class="hw-btn-disabled-wrap" title="Diese Anfrage wurde abgesagt und steht nicht mehr zur Abstimmung.">
+            <button type="button" class="hw-btn hw-btn-accept" disabled aria-disabled="true">✓</button>
+        </span>
+        <span class="hw-btn-disabled-wrap" title="Diese Anfrage wurde abgesagt und steht nicht mehr zur Abstimmung.">
+            <button type="button" class="hw-btn hw-btn-decline" disabled aria-disabled="true">✗</button>
+        </span>
+        <?php else: ?>
         <form method="post" action="<?php p($submitUrl); ?>" class="hw-rsvp-form">
             <input type="hidden" name="requesttoken"       value="<?php p($requestToken); ?>">
             <input type="hidden" name="calendarobject_id"  value="<?php p($objId); ?>">
@@ -136,6 +169,7 @@ var hwUsersPerEvent = <?php echo json_encode($usersPerEvent); ?>;
             <input type="hidden" name="response"           value="declined">
             <button type="submit" class="hw-btn hw-btn-decline <?php if ($current === 'declined') echo 'hw-btn-active'; ?>">✗</button>
         </form>
+        <?php endif; ?>
     </div>
     <div class="hw-rsvp-count" style="display:none;">
         <span class="hw-rsvp-total hw-rsvp-total-accepted"><?php p($accepted ?: '0'); ?></span>

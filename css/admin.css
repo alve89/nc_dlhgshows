@@ -28,6 +28,10 @@
     font-size: 0.875rem;
 }
 
+select.hw-settings-input {
+    padding: 0 8px;
+}
+
 .hw-settings-btn {
     height: 34px;
     padding: 0 20px;
@@ -63,4 +67,101 @@
 
 .hw-settings-row-multiselect label {
     padding-top: 6px;
+}
+
+/* Calendar-Auswahl ist ein einfaches Select2, kein Multiselect */
+.hw-settings-row:has(#calendar_id) .select2-container {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+}
+
+/* ────── Statistiken ────── */
+.hw-stats-section {
+    padding: 28px;
+    border-top: 1px solid var(--color-border);
+    margin-top: 28px;
+}
+
+.hw-stats-title {
+    font-size: 1.125rem;
+    color: var(--color-main-text);
+    margin-bottom: 16px;
+}
+
+.hw-stats-summary {
+    display: flex;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.hw-stats-card {
+    padding: 16px;
+    border: 1px solid var(--color-border);
+    border-radius: var(--border-radius);
+    background: var(--color-main-background);
+    min-width: 150px;
+}
+
+.hw-stats-label {
+    font-size: 0.75rem;
+    color: var(--color-text-lighter);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.hw-stats-value {
+    font-size: 2rem;
+    font-weight: bold;
+    color: var(--color-main-text);
+    margin-top: 8px;
+}
+
+.hw-stats-table {
+    overflow-x: auto;
+}
+
+.hw-stats-table table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.hw-stats-table thead {
+    background: var(--color-background-dark);
+}
+
+.hw-stats-table th {
+    padding: 12px;
+    text-align: left;
+    color: var(--color-main-text);
+    font-weight: 600;
+    border-bottom: 2px solid var(--color-border);
+}
+
+.hw-stats-table td {
+    padding: 12px;
+    border-bottom: 1px solid var(--color-border);
+    color: var(--color-main-text);
+}
+
+.hw-stats-table tbody tr:hover {
+    background: var(--color-background-hover);
+}
+
+.hw-stats-count {
+    font-weight: 600;
+}
+
+.hw-stats-date {
+    color: var(--color-text-lighter);
+    font-size: 0.8rem;
+}
+
+.hw-stats-empty {
+    padding: 24px;
+    text-align: center;
+    color: var(--color-text-lighter);
+    background: var(--color-background-dark);
+    border-radius: var(--border-radius);
 }

@@ -32,6 +32,48 @@ class CalendarService {
     }
 
     /**
+     * Returns all calendars from all users in the system, formatted as "Username - Displayname".
+     * Shared calendars (not owned by the user) are marked with "(Shared)".
+     * @return array<int, array{id: int, displayname: string}>
+     */
+    public function getAllCalendars(): array {
+        $calendars = [];
+        
+        foreach ($this->userManager->search('') as $user) {
+            $userId = $user->getUID();
+            $userCalendars = $this->calDavBackend->getCalendarsForUser("principals/users/{$userId}");
+            
+            foreach ($userCalendars as $cal) {
+                $displayName = $cal['{DAV:}displayname'] ?? $cal['uri'];
+                
+                // Prüfe, ob der Kalender dem Benutzer gehört oder geteilt ist
+                // principaluri enthält den Besitzer des Kalenders
+                $principalUri = $cal['principaluri'] ?? '';
+                $ownerUid = str_replace('principals/users/', '', $principalUri);
+                $isShared = ($ownerUid !== $userId);
+                
+                $label = "{$userId} - {$displayName}";
+                if ($isShared) {
+                    $label .= " (Shared)";
+                }
+                
+                $calendars[] = [
+                    'id'          => $cal['id'],
+                    'displayname' => $label,
+                    'username'    => $userId,
+                    'calname'     => $displayName,
+                    'isShared'    => $isShared,
+                ];
+            }
+        }
+        
+        // Sort by displayname
+        usort($calendars, fn($a, $b) => strcasecmp($a['displayname'], $b['displayname']));
+        
+        return $calendars;
+    }
+
+    /**
      * Returns all VEVENT objects from a specific calendar, optionally
      * filtered to a date range.
      *

@@ -7,6 +7,7 @@ namespace OCA\Dlhgshows\Controller;
 use OCA\Dlhgshows\AppInfo\Application;
 use OCA\Dlhgshows\Service\CalendarService;
 use OCA\Dlhgshows\Service\RsvpService;
+use OCA\Dlhgshows\Service\AccessLogService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\FrontpageRoute;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -24,6 +25,7 @@ class PageController extends Controller {
         IRequest $request,
         private readonly CalendarService $calendarService,
         private readonly RsvpService $rsvpService,
+        private readonly AccessLogService $accessLogService,
         private readonly IGroupManager $groupManager,
         private readonly IAppConfig $appConfig,
         private readonly IDBConnection $db,
@@ -37,6 +39,16 @@ class PageController extends Controller {
     #[FrontpageRoute(verb: 'GET', url: '/')]
     public function index(): TemplateResponse {
         $userId        = $this->userId ?? '';
+        
+        // Zugriff protokollieren mit Session-ID
+        // Die Session-ID wird client-seitig via JS generiert und dann per AJAX übermittelt
+        // Für den initialen Seitenladevorgang verwenden wir einen generischen Identifier
+        if ($userId) {
+            // Generiere eine eindeutige Session-ID basierend auf User + Request
+            $sessionId = hash('sha256', $userId . session_id());
+            $this->accessLogService->logAccess($userId, $sessionId);
+        }
+        
         $calendarId    = $this->appConfig->getValueInt(Application::APP_ID, 'calendar_id', 33);
         $calendarName  = $this->appConfig->getValueString(Application::APP_ID, 'calendar_name', 'Teamkalender');
         $statsGroupRaw = $this->appConfig->getValueString(Application::APP_ID, 'stats_groups', '');

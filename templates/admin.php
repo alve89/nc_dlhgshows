@@ -13,6 +13,9 @@ $calendarId    = $_['calendarId'];
 $statsGroups   = $_['statsGroups']  ?? [];
 $membersGroups = $_['membersGroups'] ?? [];
 $groups        = $_['groups']       ?? [];
+$calendars     = $_['calendars']    ?? [];
+$accessStats   = $_['accessStats']  ?? [];
+$totalAccesses = $_['totalAccesses'] ?? 0;
 
 $saveUrl      = \OC::$server->getURLGenerator()->linkToRoute('dlhgshows.admin.save');
 $requestToken = \OCP\Util::callRegister();
@@ -22,6 +25,11 @@ $requestToken = \OCP\Util::callRegister();
 (function () {
     function initSelect2() {
         if (typeof jQuery === 'undefined') return;
+        jQuery('#calendar_id').select2({
+            width: 'off',
+            placeholder: 'Kalender auswählen…',
+            allowClear: true,
+        });
         jQuery('#stats_groups').select2({
             width: 'off',
             placeholder: 'Gruppen auswählen…',
@@ -50,9 +58,16 @@ $requestToken = \OCP\Util::callRegister();
     <form class="hw-settings-form" action="<?php p($saveUrl); ?>" method="post">
         <input type="hidden" name="requesttoken" value="<?php p($requestToken); ?>">
         <div class="hw-settings-row">
-            <label for="calendar_id">Kalender-ID</label>
-            <input type="number" id="calendar_id" name="calendar_id"
-                   value="<?php p($calendarId); ?>" class="hw-settings-input">
+            <label for="calendar_id">Kalender</label>
+            <select id="calendar_id" name="calendar_id" class="hw-settings-select2">
+                <option value="">-- Kalender auswählen --</option>
+                <?php foreach ($calendars as $calendar): ?>
+                    <option value="<?php p($calendar['id']); ?>"
+                        <?php if ($calendar['id'] === $calendarId) echo 'selected'; ?>>
+                        <?php p($calendar['displayname']); ?>
+                    </option>
+                <?php endforeach; ?>
+            </select>
         </div>
         <div class="hw-settings-row">
             <label for="calendar_name">Kalender-Anzeigename</label>
@@ -88,5 +103,41 @@ $requestToken = \OCP\Util::callRegister();
         </div>
         <div id="hw-settings-message" class="hw-settings-message" style="display:none;"></div>
     </form>
+
+    <!-- Statistik-Sektion -->
+    <div class="hw-stats-section">
+        <h3 class="hw-stats-title">Zugriffstatistiken</h3>
+        <div class="hw-stats-summary">
+            <div class="hw-stats-card">
+                <div class="hw-stats-label">Gesamtzugriffe</div>
+                <div class="hw-stats-value"><?php p($totalAccesses); ?></div>
+            </div>
+        </div>
+        
+        <?php if (!empty($accessStats)): ?>
+            <div class="hw-stats-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Benutzer</th>
+                            <th>Zugriffe</th>
+                            <th>Letzter Zugriff</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php foreach ($accessStats as $stat): ?>
+                            <tr>
+                                <td><?php p($stat['user_id']); ?></td>
+                                <td class="hw-stats-count"><?php p($stat['count']); ?></td>
+                                <td class="hw-stats-date"><?php p(date('d.m.Y H:i', $stat['last_access'])); ?></td>
+                            </tr>
+                        <?php endforeach; ?>
+                    </tbody>
+                </table>
+            </div>
+        <?php else: ?>
+            <div class="hw-stats-empty">Noch keine Zugriffe protokolliert.</div>
+        <?php endif; ?>
+    </div>
 
 </div>

@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', function () {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
+            // Keine Abstimmung für abgesagte Einträge
+            var row = form.closest('tr');
+            if (row && row.dataset.type === 'absage') {
+                return;
+            }
+
             var data = new FormData(form);
 
             fetch(form.action, {

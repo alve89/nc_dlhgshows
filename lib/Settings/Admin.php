@@ -7,6 +7,7 @@ namespace OCA\Dlhgshows\Settings;
 use OCA\Dlhgshows\AppInfo\Application;
 use OCA\Dlhgshows\Service\CalendarService;
 use OCA\Dlhgshows\Service\RsvpService;
+use OCA\Dlhgshows\Service\AccessLogService;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -19,6 +20,7 @@ class Admin implements ISettings {
     public function __construct(
         private readonly CalendarService $calendarService,
         private readonly RsvpService $rsvpService,
+        private readonly AccessLogService $accessLogService,
         private readonly IUserSession $userSession,
         private readonly IAppConfig $appConfig,
         private readonly IGroupManager $groupManager,
@@ -45,8 +47,15 @@ class Admin implements ISettings {
         }
         usort($groups, fn($a, $b) => strcasecmp($a['displayName'], $b['displayName']));
 
+        // Alle Kalender von allen Benutzern laden
+        $calendars = $this->calendarService->getAllCalendars();
+
         $events = $this->calendarService->getEvents($userId, $calendarId);
         $totals = $this->rsvpService->getTotalsPerEvent();
+        
+        // Zugriffstatistiken laden
+        $accessStats = $this->accessLogService->getStatistics();
+        $totalAccesses = $this->accessLogService->getTotalAccesses();
 
         return new TemplateResponse(Application::APP_ID, 'admin', [
             'calendarName'  => $calendarName,
@@ -56,6 +65,9 @@ class Admin implements ISettings {
             'statsGroups'   => $statsGroups,
             'membersGroups' => $membersGroups,
             'groups'        => $groups,
+            'calendars'     => $calendars,
+            'accessStats'   => $accessStats,
+            'totalAccesses' => $totalAccesses,
         ], 'blank');
     }
 

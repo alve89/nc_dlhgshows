@@ -1,0 +1,152 @@
+/* ── dlhgshows – Tabelle ────────────────────────────────────────────────── */
+
+.hw-table-wrap {
+    overflow-x: auto;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid var(--color-border);
+    border-bottom: 1px solid var(--color-border);
+    width: 100%;
+}
+
+.hw-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.875rem;
+}
+
+.hw-th {
+    padding: 10px 14px;
+    text-align: left;
+    font-weight: 600;
+    color: var(--color-text-maxcontrast);
+    background: var(--color-background-dark);
+    border-bottom: 1px solid var(--color-border);
+    white-space: nowrap;
+    user-select: none;
+}
+
+.hw-th-sortable { cursor: pointer; }
+
+.hw-th-sortable:hover {
+    background: var(--color-background-hover);
+    color: var(--color-main-text);
+}
+
+.hw-sort-icon {
+    font-size: 0.75rem;
+    opacity: 0.6;
+    margin-left: 4px;
+}
+
+.hw-tr:nth-child(even) { background: var(--color-background-dark); }
+.hw-tr:hover           { background: var(--color-background-hover); }
+
+.hw-td {
+    padding: 10px 14px;
+    border-bottom: 1px solid var(--color-border-dark);
+    color: var(--color-main-text);
+    vertical-align: top;
+}
+
+.hw-td-title { font-weight: 500; min-width: 180px; }
+.hw-td-date  { white-space: nowrap; min-width: 140px; color: var(--color-text-maxcontrast); }
+.hw-td-loc   { white-space: nowrap; width: 1%; }
+.hw-td-desc  { width: 100%; max-width: none; color: var(--color-text-maxcontrast); }
+
+.hw-th-rsvp {
+    text-align: center;
+    width: 60px;
+}
+
+.hw-td-rsvp {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+}
+
+.hw-rsvp-cell {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+}
+
+.hw-rsvp-form {
+    border: none;
+    margin: 0;
+    padding: 0;
+}
+
+.hw-rsvp-btn-wrap {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 8px;
+    transition: none !important;
+}
+
+.hw-rsvp-count {
+    transition: none !important;
+}
+
+/* ── Aktive Zeile ──────────────────────────────────────────────────────── */
+
+.hw-tr--active {
+    background: var(--color-primary-element-light) !important;
+    outline: 2px solid var(--color-primary-element);
+    outline-offset: -2px;
+}
+
+.hw-tr {
+    cursor: pointer;
+}
+
+/* ── Absage-Zeilen ─────────────────────────────────────────────────────── */
+
+tr[data-type="absage"] .hw-td {
+    color: #aaaaaa !important;
+}
+
+tr[data-type="absage"] .hw-td-title span,
+tr[data-type="absage"] .hw-td-title a {
+    color: #aaaaaa !important;
+}
+
+tr[data-type="absage"] .hw-badge-allday {
+    opacity: 0.5;
+}
+
+tr[data-type="absage"] .hw-btn {
+    opacity: 0.35;
+    cursor: not-allowed !important;
+    border-color: #aaaaaa !important;
+    color: #aaaaaa !important;
+    background: var(--color-background-dark) !important;
+    pointer-events: none;
+}
+
+tr[data-type="absage"] .hw-btn:hover {
+    border-color: #aaaaaa !important;
+    color: #aaaaaa !important;
+}
+
+tr[data-type="absage"] .hw-btn.hw-btn-active {
+    background: #aaaaaa !important;
+    border-color: #aaaaaa !important;
+    color: #fff !important;
+    opacity: 0.45;
+}
+
+/* Wrapper erhält pointer-events damit der Tooltip-Wrapper greift */
+tr[data-type="absage"] .hw-btn-disabled-wrap {
+    display: inline-block;
+    cursor: not-allowed;
+    position: relative;
+}
+
+/* ── Responsive: Karten-Layout auf Mobile ──────────────────────────────── */
+@import url("main.table.mobile.css");
+
