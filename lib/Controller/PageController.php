@@ -49,14 +49,34 @@ class PageController extends Controller {
             $this->accessLogService->logAccess($userId, $sessionId);
         }
         
-        $calendarId    = $this->appConfig->getValueInt(Application::APP_ID, 'calendar_id', 33);
-        $calendarName  = $this->appConfig->getValueString(Application::APP_ID, 'calendar_name', 'Teamkalender');
-        $statsGroupRaw = $this->appConfig->getValueString(Application::APP_ID, 'stats_groups', '');
-        $statsGroups   = $statsGroupRaw !== '' ? json_decode($statsGroupRaw, true) ?? [] : [];
+        $calendarName    = $this->appConfig->getValueString(Application::APP_ID, 'calendar_name', 'Teamkalender');
+        $statsGroupRaw   = $this->appConfig->getValueString(Application::APP_ID, 'stats_groups', '');
+        $statsGroups     = $statsGroupRaw !== '' ? json_decode($statsGroupRaw, true) ?? [] : [];
         $membersGroupRaw = $this->appConfig->getValueString(Application::APP_ID, 'members_groups', '');
         $membersGroups   = $membersGroupRaw !== '' ? json_decode($membersGroupRaw, true) ?? [] : [];
 
-        $events        = $this->calendarService->getEvents($userId, $calendarId);
+        $calendarIdsRaw = $this->appConfig->getValueString(Application::APP_ID, 'calendar_ids', '');
+        $calendarIds    = $calendarIdsRaw !== '' ? json_decode($calendarIdsRaw, true) ?? [] : [];
+        // Fallback auf alte Einzel-ID-Einstellung
+        if (empty($calendarIds)) {
+            $oldId = $this->appConfig->getValueInt(Application::APP_ID, 'calendar_id', 33);
+            if ($oldId > 0) {
+                $calendarIds = [$oldId];
+            }
+        }
+
+        $calendarIds = array_values(array_unique($calendarIds));
+
+        $events = [];
+        foreach ($calendarIds as $calId) {
+            try {
+                $calEvents = $this->calendarService->getEvents($userId, (int)$calId);
+                $events    = array_merge($events, $calEvents);
+            } catch (\Exception) {
+                // Nicht verfügbare Kalender überspringen
+            }
+        }
+        usort($events, fn($a, $b) => strcmp($a['start'], $b['start']));
         $rsvps         = $this->rsvpService->getForUser($userId);
         $totals        = $this->rsvpService->getTotalsPerEvent();
         $usersPerEvent = $this->rsvpService->getUsersPerEvent();

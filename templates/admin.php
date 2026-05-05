@@ -6,10 +6,8 @@
 \OCP\Util::addScript('core', 'select2');
 \OCP\Util::addStyle('core', 'select2');
 
-$events        = $_['events'];
 $calendarName  = $_['calendarName'];
-$totals        = $_['totals'];
-$calendarId    = $_['calendarId'];
+$calendarIds   = $_['calendarIds']  ?? [];
 $statsGroups   = $_['statsGroups']  ?? [];
 $membersGroups = $_['membersGroups'] ?? [];
 $groups        = $_['groups']       ?? [];
@@ -25,7 +23,7 @@ $requestToken = \OCP\Util::callRegister();
 (function () {
     function initSelect2() {
         if (typeof jQuery === 'undefined') return;
-        jQuery('#calendar_id').select2({
+        jQuery('#calendar_ids').select2({
             width: 'off',
             placeholder: 'Kalender auswählen…',
             allowClear: true,
@@ -57,13 +55,12 @@ $requestToken = \OCP\Util::callRegister();
 
     <form class="hw-settings-form" action="<?php p($saveUrl); ?>" method="post">
         <input type="hidden" name="requesttoken" value="<?php p($requestToken); ?>">
-        <div class="hw-settings-row">
-            <label for="calendar_id">Kalender</label>
-            <select id="calendar_id" name="calendar_id" class="hw-settings-select2">
-                <option value="">-- Kalender auswählen --</option>
+        <div class="hw-settings-row hw-settings-row-multiselect">
+            <label for="calendar_ids">Kalender</label>
+            <select id="calendar_ids" name="calendar_ids[]" class="hw-settings-select2" multiple>
                 <?php foreach ($calendars as $calendar): ?>
                     <option value="<?php p($calendar['id']); ?>"
-                        <?php if ($calendar['id'] === $calendarId) echo 'selected'; ?>>
+                        <?php if (in_array($calendar['id'], $calendarIds, false)) echo 'selected'; ?>>
                         <?php p($calendar['displayname']); ?>
                     </option>
                 <?php endforeach; ?>
