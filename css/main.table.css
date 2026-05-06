@@ -149,6 +149,4 @@ tr[data-type="absage"] .hw-btn-disabled-wrap {
     position: relative;
 }
 
-/* ── Responsive: Karten-Layout auf Mobile ──────────────────────────────── */
-@import url("main.table.mobile.css");
 
