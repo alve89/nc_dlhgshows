@@ -19,7 +19,7 @@
     font-weight: 700;
     color: var(--color-main-text);
     margin: 0;
-    flex-shrink: 0;
+    word-break: break-word;
 }
 
 .hw-controls {
