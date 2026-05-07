@@ -54,6 +54,17 @@ setTimeout(function () {
         });
     });
 
+    var closeBtn = document.querySelector('.hw-sidebar-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', function () {
+            var sidebar = document.querySelector('.hw-sidebar');
+            if (sidebar) { sidebar.style.display = 'none'; }
+            document.querySelectorAll('.hw-tr--active').forEach(function (r) {
+                r.classList.remove('hw-tr--active');
+            });
+        });
+    }
+
     function hwFillSidebar(row) {
         var objId    = parseInt(row.dataset.objid, 10);
         var allUsers = (typeof hwAllUsers !== 'undefined') ? hwAllUsers : {};
@@ -85,9 +96,23 @@ setTimeout(function () {
         users.forEach(function (userId) {
             var displayName = (hwAllUsers && hwAllUsers[userId]) ? hwAllUsers[userId] : userId;
             var span = document.createElement('span');
-            span.className   = 'hw-avatar';
-            span.textContent = hwInitials(displayName);
-            span.title       = displayName;
+            span.className = 'hw-avatar';
+            span.title     = displayName;
+
+            var hasAvatar = Array.isArray(hwUsersWithAvatars) && hwUsersWithAvatars.indexOf(userId) !== -1;
+            if (hasAvatar) {
+                var img = document.createElement('img');
+                img.src = OC.generateUrl('/avatar/' + encodeURIComponent(userId) + '/32');
+                img.alt = hwInitials(displayName);
+                img.addEventListener('error', function () {
+                    img.remove();
+                    span.textContent = hwInitials(displayName);
+                });
+                span.appendChild(img);
+            } else {
+                span.textContent = hwInitials(displayName);
+            }
+
             container.appendChild(span);
         });
         if (!users.length) {

@@ -353,6 +353,25 @@
 
 /* ── Avatar-Chips ──────────────────────────────────────────────────────── */
 
+.hw-sidebar-close {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 1.1rem;
+    line-height: 1;
+    color: var(--color-text-maxcontrast);
+    padding: 4px 6px;
+    border-radius: 4px;
+}
+
+.hw-sidebar-close:hover {
+    color: var(--color-main-text);
+    background: var(--color-background-hover);
+}
+
 .hw-stats-avatars {
     display: flex;
     flex-wrap: wrap;
@@ -373,6 +392,14 @@
     font-weight: 700;
     cursor: default;
     flex-shrink: 0;
+}
+
+.hw-avatar img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    display: block;
 }
 
 .hw-avatar-empty {

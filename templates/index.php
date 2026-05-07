@@ -7,8 +7,9 @@ $events        = $_['events'];
 $calendarName  = $_['calendarName'];
 $rsvps         = $_['rsvps'];
 $totals        = $_['totals'];
-$usersPerEvent = $_['usersPerEvent'] ?? [];
-$allUserIds    = $_['allUserIds'] ?? [];
+$usersPerEvent    = $_['usersPerEvent'] ?? [];
+$allUserIds       = $_['allUserIds'] ?? [];
+$usersWithAvatars = $_['usersWithAvatars'] ?? [];
 $canSeeStats   = $_['canSeeStats'];
 
 $submitUrl    = \OC::$server->getURLGenerator()->linkToRoute('dlhgshows.rsvp.upsert');
@@ -16,8 +17,9 @@ $requestToken = \OCP\Util::callRegister();
 $nonce = \OC::$server->getContentSecurityPolicyNonceManager()->getNonce();
 ?>
 <script nonce="<?php p($nonce); ?>">
-var hwAllUsers      = <?php echo json_encode($allUserIds); ?>;
-var hwUsersPerEvent = <?php echo json_encode($usersPerEvent); ?>;
+var hwAllUsers         = <?php echo json_encode($allUserIds); ?>;
+var hwUsersPerEvent    = <?php echo json_encode($usersPerEvent); ?>;
+var hwUsersWithAvatars = <?php echo json_encode($usersWithAvatars); ?>;
 
 // ── Session Tracking ────────────────────────────────────────────────────────
 (function() {
@@ -196,6 +198,7 @@ var hwUsersPerEvent = <?php echo json_encode($usersPerEvent); ?>;
                                 </div>
                             </div>
                         </div>
+                        <button class="hw-sidebar-close" aria-label="Schließen">&#x2715;</button>
                     </div>
                     <div class="app-sidebar-tabs">
                         <div class="app-sidebar-tabs__content">

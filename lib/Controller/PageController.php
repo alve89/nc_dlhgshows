@@ -13,6 +13,7 @@ use OCP\AppFramework\Http\Attribute\FrontpageRoute;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\IAvatarManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -29,6 +30,7 @@ class PageController extends Controller {
         private readonly IGroupManager $groupManager,
         private readonly IAppConfig $appConfig,
         private readonly IDBConnection $db,
+        private readonly IAvatarManager $avatarManager,
         private readonly ?string $userId,
     ) {
         parent::__construct(Application::APP_ID, $request);
@@ -103,6 +105,17 @@ class PageController extends Controller {
             }
         }
 
+        $usersWithAvatars = [];
+        foreach (array_keys($allUserIds) as $uid) {
+            try {
+                if ($this->avatarManager->getAvatar($uid)->exists()) {
+                    $usersWithAvatars[] = $uid;
+                }
+            } catch (\Exception) {
+                // Benutzer ohne Avatar oder ungültige UID überspringen
+            }
+        }
+
         $canSeeStats = false;
         foreach ($statsGroups as $group) {
             if ($this->groupManager->isInGroup($userId, $group)) {
@@ -112,14 +125,15 @@ class PageController extends Controller {
         }
 
         return new TemplateResponse(Application::APP_ID, 'index', [
-            'calendarName'  => $calendarName,
-            'events'        => $events,
-            'rsvps'         => $rsvps,
-            'totals'        => $totals,
-            'usersPerEvent' => $usersPerEvent,
-            'allUserIds'    => $allUserIds,
-            'userId'        => $userId,
-            'canSeeStats'   => $canSeeStats,
+            'calendarName'     => $calendarName,
+            'events'           => $events,
+            'rsvps'            => $rsvps,
+            'totals'           => $totals,
+            'usersPerEvent'    => $usersPerEvent,
+            'allUserIds'       => $allUserIds,
+            'usersWithAvatars' => $usersWithAvatars,
+            'userId'           => $userId,
+            'canSeeStats'      => $canSeeStats,
         ]);
     }
 }
