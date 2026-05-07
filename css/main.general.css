@@ -409,7 +409,25 @@
 
 @media (max-width: 768px) {
     .hw-sidebar {
-        display: none !important;
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: 50vh;
+        overflow-y: auto;
+        border-radius: 16px 16px 0 0;
+        border: 1.5px solid var(--color-border-dark);
+        border-bottom: none;
+        box-shadow: 0 -8px 10px rgba(0, 0, 0, 0.22);
+        background: var(--color-main-background);
+        z-index: 2000;
+    }
+
+    .hw-sidebar-close {
+        top: 14px;
+        right: 14px;
     }
 
     .hw-legend {
