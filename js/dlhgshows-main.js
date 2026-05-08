@@ -56,13 +56,7 @@ setTimeout(function () {
 
     var closeBtn = document.querySelector('.hw-sidebar-close');
     if (closeBtn) {
-        closeBtn.addEventListener('click', function () {
-            var sidebar = document.querySelector('.hw-sidebar');
-            if (sidebar) { sidebar.style.display = 'none'; }
-            document.querySelectorAll('.hw-tr--active').forEach(function (r) {
-                r.classList.remove('hw-tr--active');
-            });
-        });
+        closeBtn.addEventListener('click', hwDeactivateStats);
     }
 
     function hwFillSidebar(row) {
@@ -127,6 +121,17 @@ setTimeout(function () {
     var hidden = { auftritt: false, anfrage: false, absage: true };
     var statsActive = false;
 
+    function hwDeactivateStats() {
+        statsActive = false;
+        var dot = document.querySelector('.hw-legend-item[data-type="stats"] .hw-legend-dot');
+        if (dot) { dot.classList.add('hw-legend-dot-empty'); }
+        document.querySelectorAll('.hw-rsvp-btn-wrap').forEach(function (el) { el.style.display = ''; });
+        document.querySelectorAll('.hw-rsvp-count').forEach(function (el) { el.style.display = 'none'; });
+        document.querySelectorAll('.hw-tr--active').forEach(function (r) { r.classList.remove('hw-tr--active'); });
+        var sidebar = document.querySelector('.hw-sidebar');
+        if (sidebar) { sidebar.style.display = 'none'; }
+    }
+
     document.querySelectorAll('.hw-legend-item').forEach(function (item) {
         item.style.cursor = 'pointer';
 
@@ -140,7 +145,7 @@ setTimeout(function () {
                 if (statsActive) {
                     dot.classList.remove('hw-legend-dot-empty');
                 } else {
-                    dot.classList.add('hw-legend-dot-empty');
+                    hwDeactivateStats();
                 }
 
                 // Buttons aus-/einblenden, Zahlen ein-/ausblenden
