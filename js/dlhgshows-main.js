@@ -5,6 +5,12 @@ document.addEventListener('DOMContentLoaded', function () {
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
+            // Keine Abstimmung für abgesagte Einträge
+            var row = form.closest('tr');
+            if (row && row.dataset.type === 'absage') {
+                return;
+            }
+
             var data = new FormData(form);
 
             fetch(form.action, {
@@ -22,15 +28,133 @@ setTimeout(function () {
     form.querySelector('.hw-btn').blur();
 }, 50);
 
+                // Sidebar aktualisieren falls sichtbar
+                if (document.querySelector('.hw-sidebar') &&
+                    document.querySelector('.hw-sidebar').style.display !== 'none') {
+                    var activeRow = document.querySelector('tr.hw-tr--active');
+                    if (activeRow) { hwFillSidebar(activeRow); }
+                }
             }).catch(function (err) {
                 console.error('RSVP fehlgeschlagen:', err);
             });
         });
     });
 
+    // ── Zeilen-Klick → Sidebar befüllen ────────────────────────────────────
+    document.querySelectorAll('.hw-tr').forEach(function (row) {
+        row.addEventListener('click', function (e) {
+            if (e.target.closest('a, button, form')) return;
+            var sidebar = document.querySelector('.hw-sidebar');
+            if (!sidebar || sidebar.style.display === 'none') return;
+            document.querySelectorAll('.hw-tr').forEach(function (r) {
+                r.classList.remove('hw-tr--active');
+            });
+            row.classList.add('hw-tr--active');
+            hwFillSidebar(row);
+        });
+    });
+
+    var closeBtn = document.querySelector('.hw-sidebar-close');
+    if (closeBtn) {
+        closeBtn.addEventListener('click', hwDeactivateStats);
+    }
+
+    function hwFillSidebar(row) {
+        var objId    = parseInt(row.dataset.objid, 10);
+        var allUsers = (typeof hwAllUsers !== 'undefined') ? hwAllUsers : {};
+        var perEvent = (typeof hwUsersPerEvent !== 'undefined') ? hwUsersPerEvent : {};
+
+        var eventData = perEvent[objId] || { accepted: [], declined: [] };
+        var accepted  = eventData.accepted  || [];
+        var declined  = eventData.declined  || [];
+        var responded = accepted.concat(declined);
+        var noReply   = Object.keys(allUsers).filter(function (u) { return responded.indexOf(u) === -1; });
+
+        var cA = document.getElementById('hw-count-accepted');
+        var cD = document.getElementById('hw-count-declined');
+        var cN = document.getElementById('hw-count-none');
+        if (cA) cA.textContent = accepted.length;
+        if (cD) cD.textContent = declined.length;
+        if (cN) cN.textContent = noReply.length;
+
+        hwRenderAvatars('#hw-stats-accepted .hw-stats-avatars', accepted);
+        hwRenderAvatars('#hw-stats-declined .hw-stats-avatars', declined);
+        hwRenderAvatars('#hw-stats-none    .hw-stats-avatars', noReply);
+    }
+
+    function hwInitials(displayName) {
+        var parts = displayName.trim().split(/\s+/);
+        if (parts.length >= 2) {
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+        }
+        return displayName.substring(0, 2).toUpperCase();
+    }
+
+    function hwRenderAvatars(selector, users) {
+        var container = document.querySelector(selector);
+        if (!container) return;
+        container.innerHTML = '';
+        users.forEach(function (userId) {
+            var displayName = (hwAllUsers && hwAllUsers[userId]) ? hwAllUsers[userId] : userId;
+            var span = document.createElement('span');
+            span.className = 'hw-avatar';
+            if (hwHighlightedUsers && hwHighlightedUsers[userId]) {
+                span.classList.add('hw-avatar-highlighted');
+            }
+            span.title     = displayName;
+
+            var hasAvatar = Array.isArray(hwUsersWithAvatars) && hwUsersWithAvatars.indexOf(userId) !== -1;
+            if (hasAvatar) {
+                var img = document.createElement('img');
+                img.src = OC.generateUrl('/avatar/' + encodeURIComponent(userId) + '/32');
+                img.alt = hwInitials(displayName);
+                img.addEventListener('error', function () {
+                    img.remove();
+                    span.textContent = hwInitials(displayName);
+                });
+                span.appendChild(img);
+            } else {
+                span.textContent = hwInitials(displayName);
+            }
+
+            container.appendChild(span);
+        });
+        if (!users.length) {
+            var empty = document.createElement('span');
+            empty.className   = 'hw-avatar-empty';
+            empty.textContent = '—';
+            container.appendChild(empty);
+        }
+    }
+
     // ── Legende Filter ──────────────────────────────────────────────────────
-    var hidden = { auftritt: false, anfrage: false, absage: false };
+    var hidden = { auftritt: false, anfrage: false, absage: true, vergangen: true };
     var statsActive = false;
+
+    function hwApplyFilters() {
+        document.querySelectorAll('.hw-tr').forEach(function (row) {
+            var type    = row.dataset.type;
+            var isPast  = row.dataset.past === '1';
+            var shouldHide = !!hidden[type] || (isPast && hidden.vergangen);
+            row.classList.toggle('hw-tr-hidden', shouldHide);
+            if (shouldHide) {
+                row.style.setProperty('display', 'none', 'important');
+            } else {
+                row.style.removeProperty('display');
+            }
+        });
+    }
+
+    function hwDeactivateStats() {
+        statsActive = false;
+        var dot = document.querySelector('.hw-legend-item[data-type="stats"] .hw-legend-dot');
+        if (dot) { dot.classList.add('hw-legend-dot-empty'); }
+        document.querySelectorAll('.hw-rsvp-btn-wrap').forEach(function (el) { el.style.display = ''; });
+        document.querySelectorAll('.hw-rsvp-count').forEach(function (el) { el.style.display = 'none'; });
+        document.querySelectorAll('.hw-tr--active').forEach(function (r) { r.classList.remove('hw-tr--active'); });
+        var sidebar = document.querySelector('.hw-sidebar');
+        if (sidebar) { sidebar.style.display = 'none'; }
+    }
 
     document.querySelectorAll('.hw-legend-item').forEach(function (item) {
         item.style.cursor = 'pointer';
@@ -45,30 +169,38 @@ setTimeout(function () {
                 if (statsActive) {
                     dot.classList.remove('hw-legend-dot-empty');
                 } else {
-                    dot.classList.add('hw-legend-dot-empty');
+                    hwDeactivateStats();
                 }
-
-                // Buttons aus-/einblenden, Zahlen ein-/ausblenden
                 document.querySelectorAll('.hw-rsvp-btn-wrap').forEach(function (el) {
                     el.style.display = statsActive ? 'none' : '';
                 });
                 document.querySelectorAll('.hw-rsvp-count').forEach(function (el) {
                     el.style.display = statsActive ? '' : 'none';
                 });
+                var sidebar = document.querySelector('.hw-sidebar');
+                if (sidebar) {
+                    sidebar.style.display = statsActive ? '' : 'none';
+                    if (!statsActive) {
+                        document.querySelectorAll('.hw-tr--active').forEach(function (r) {
+                            r.classList.remove('hw-tr--active');
+                        });
+                    }
+                }
                 return;
             }
 
             // Zeilen-Filter
             hidden[type] = !hidden[type];
             var dot = item.querySelector('.hw-legend-dot');
-            if (hidden[type]) {
-                dot.classList.add('hw-legend-dot-empty');
-            } else {
-                dot.classList.remove('hw-legend-dot-empty');
-            }
-            document.querySelectorAll('tr[data-type="' + type + '"]').forEach(function (row) {
-                row.style.display = hidden[type] ? 'none' : '';
-            });
+            dot.classList.toggle('hw-legend-dot-empty', hidden[type]);
+            hwApplyFilters();
         });
     });
+
+    // Initial-Zustand: Dots für ausgeblendete Filter markieren und Filter anwenden
+    ['absage', 'vergangen'].forEach(function (type) {
+        var dot = document.querySelector('.hw-legend-item[data-type="' + type + '"] .hw-legend-dot');
+        if (dot) { dot.classList.add('hw-legend-dot-empty'); }
+    });
+    hwApplyFilters();
 });

@@ -7,14 +7,17 @@ namespace OCA\Dlhgshows\Controller;
 use OCA\Dlhgshows\AppInfo\Application;
 use OCA\Dlhgshows\Service\CalendarService;
 use OCA\Dlhgshows\Service\RsvpService;
+use OCA\Dlhgshows\Service\AccessLogService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\Attribute\FrontpageRoute;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\IAvatarManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IDBConnection;
 
 
 class PageController extends Controller {
@@ -23,8 +26,11 @@ class PageController extends Controller {
         IRequest $request,
         private readonly CalendarService $calendarService,
         private readonly RsvpService $rsvpService,
+        private readonly AccessLogService $accessLogService,
         private readonly IGroupManager $groupManager,
         private readonly IAppConfig $appConfig,
+        private readonly IDBConnection $db,
+        private readonly IAvatarManager $avatarManager,
         private readonly ?string $userId,
     ) {
         parent::__construct(Application::APP_ID, $request);
@@ -34,15 +40,117 @@ class PageController extends Controller {
     #[NoAdminRequired]
     #[FrontpageRoute(verb: 'GET', url: '/')]
     public function index(): TemplateResponse {
-        $userId       = $this->userId ?? '';
-        $calendarId    = $this->appConfig->getValueInt(Application::APP_ID, 'calendar_id', 33);
-        $calendarName  = $this->appConfig->getValueString(Application::APP_ID, 'calendar_name', 'Teamkalender');
-        $statsGroupRaw = $this->appConfig->getValueString(Application::APP_ID, 'stats_groups', '');
-        $statsGroups   = $statsGroupRaw !== '' ? json_decode($statsGroupRaw, true) ?? [] : [];
+        $userId        = $this->userId ?? '';
+        
+        // Zugriff protokollieren mit Session-ID
+        // Die Session-ID wird client-seitig via JS generiert und dann per AJAX übermittelt
+        // Für den initialen Seitenladevorgang verwenden wir einen generischen Identifier
+        if ($userId) {
+            // Generiere eine eindeutige Session-ID basierend auf User + Request
+            $sessionId = hash('sha256', $userId . session_id());
+            $this->accessLogService->logAccess($userId, $sessionId);
+        }
+        
+        $calendarName      = $this->appConfig->getValueString(Application::APP_ID, 'calendar_name', 'Teamkalender');
+        $statsGroupRaw     = $this->appConfig->getValueString(Application::APP_ID, 'stats_groups', '');
+        $statsGroups       = $statsGroupRaw !== '' ? json_decode($statsGroupRaw, true) ?? [] : [];
+        $membersGroupRaw   = $this->appConfig->getValueString(Application::APP_ID, 'members_groups', '');
+        $membersGroups     = $membersGroupRaw !== '' ? json_decode($membersGroupRaw, true) ?? [] : [];
+        $highlightGroupRaw = $this->appConfig->getValueString(Application::APP_ID, 'highlight_groups', '');
+        $highlightGroups   = $highlightGroupRaw !== '' ? json_decode($highlightGroupRaw, true) ?? [] : [];
 
-        $events = $this->calendarService->getEvents($userId, $calendarId);
-        $rsvps  = $this->rsvpService->getForUser($userId);
-        $totals = $this->rsvpService->getTotalsPerEvent();
+        $calendarIdsRaw = $this->appConfig->getValueString(Application::APP_ID, 'calendar_ids', '');
+        $calendarIds    = $calendarIdsRaw !== '' ? json_decode($calendarIdsRaw, true) ?? [] : [];
+        // Fallback auf alte Einzel-ID-Einstellung
+        if (empty($calendarIds)) {
+            $oldId = $this->appConfig->getValueInt(Application::APP_ID, 'calendar_id', 33);
+            if ($oldId > 0) {
+                $calendarIds = [$oldId];
+            }
+        }
+
+        $calendarIds = array_values(array_unique($calendarIds));
+
+        $events = [];
+        foreach ($calendarIds as $calId) {
+            try {
+                $calEvents = $this->calendarService->getEvents($userId, (int)$calId);
+                $events    = array_merge($events, $calEvents);
+            } catch (\Exception) {
+                // Nicht verfügbare Kalender überspringen
+            }
+        }
+        usort($events, fn($a, $b) => strcmp($a['start'], $b['start']));
+        $rsvps         = $this->rsvpService->getForUser($userId);
+        $totals        = $this->rsvpService->getTotalsPerEvent();
+        $usersPerEvent = $this->rsvpService->getUsersPerEvent();
+
+        // Mitglieder aller konfigurierten Mitgliedergruppen laden
+        $allUserIds = [];
+        foreach ($membersGroups as $group) {
+            $groupObj = $this->groupManager->get($group);
+            if ($groupObj) {
+                foreach ($groupObj->getUsers() as $user) {
+                    $uid = $user->getUID();
+                    // displayname aus oc_accounts_data abrufen
+                    $query = $this->db->getQueryBuilder();
+                    $query->select('value')
+                        ->from('accounts_data')
+                        ->where($query->expr()->eq('uid', $query->createNamedParameter($uid)))
+                        ->andWhere($query->expr()->eq('name', $query->createNamedParameter('displayname')));
+                    $result = $query->executeQuery();
+                    $row = $result->fetch();
+                    $result->closeCursor();
+                    $displayName = $row ? $row['value'] : $uid;
+                    $allUserIds[$uid] = $displayName;
+                }
+            }
+        }
+
+        $allowedUserIds = array_fill_keys(array_keys($allUserIds), true);
+        foreach ($usersPerEvent as $eventId => $responses) {
+            foreach (['accepted', 'declined'] as $responseType) {
+                $filteredUsers = [];
+                foreach (($responses[$responseType] ?? []) as $uid) {
+                    if (isset($allowedUserIds[$uid])) {
+                        $filteredUsers[] = $uid;
+                    }
+                }
+                $usersPerEvent[$eventId][$responseType] = $filteredUsers;
+            }
+        }
+
+        foreach ($totals as $eventId => $responseTotals) {
+            if (!isset($usersPerEvent[$eventId])) {
+                unset($totals[$eventId]);
+                continue;
+            }
+            $totals[$eventId] = [
+                'accepted' => count($usersPerEvent[$eventId]['accepted'] ?? []),
+                'declined' => count($usersPerEvent[$eventId]['declined'] ?? []),
+            ];
+        }
+
+        $usersWithAvatars = [];
+        foreach (array_keys($allUserIds) as $uid) {
+            try {
+                if ($this->avatarManager->getAvatar($uid)->exists()) {
+                    $usersWithAvatars[] = $uid;
+                }
+            } catch (\Exception) {
+                // Benutzer ohne Avatar oder ungültige UID überspringen
+            }
+        }
+
+        $highlightedUserIds = [];
+        foreach ($highlightGroups as $group) {
+            $groupObj = $this->groupManager->get($group);
+            if ($groupObj) {
+                foreach ($groupObj->getUsers() as $user) {
+                    $highlightedUserIds[$user->getUID()] = true;
+                }
+            }
+        }
 
         $canSeeStats = false;
         foreach ($statsGroups as $group) {
@@ -51,14 +159,18 @@ class PageController extends Controller {
                 break;
             }
         }
-        
+
         return new TemplateResponse(Application::APP_ID, 'index', [
-            'calendarName' => $calendarName,
-            'events'       => $events,
-            'rsvps'        => $rsvps,
-            'totals'       => $totals,
-            'userId'       => $userId,
-            'canSeeStats'  => $canSeeStats,
+            'calendarName'      => $calendarName,
+            'events'            => $events,
+            'rsvps'             => $rsvps,
+            'totals'            => $totals,
+            'usersPerEvent'     => $usersPerEvent,
+            'allUserIds'        => $allUserIds,
+            'usersWithAvatars'  => $usersWithAvatars,
+            'highlightedUserIds' => array_keys($highlightedUserIds),
+            'userId'            => $userId,
+            'canSeeStats'       => $canSeeStats,
         ]);
     }
 }

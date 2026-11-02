@@ -6,10 +6,9 @@ namespace OCA\Dlhgshows\Settings;
 
 use OCA\Dlhgshows\AppInfo\Application;
 use OCA\Dlhgshows\Service\CalendarService;
-use OCA\Dlhgshows\Service\RsvpService;
+use OCA\Dlhgshows\Service\AccessLogService;
 use OCP\AppFramework\Http\TemplateResponse;
 use OCP\IAppConfig;
-use OCP\IUserSession;
 use OCP\Settings\ISettings;
 use OCP\IGroupManager;
 
@@ -18,20 +17,30 @@ class Admin implements ISettings {
 
     public function __construct(
         private readonly CalendarService $calendarService,
-        private readonly RsvpService $rsvpService,
-        private readonly IUserSession $userSession,
+        private readonly AccessLogService $accessLogService,
         private readonly IAppConfig $appConfig,
         private readonly IGroupManager $groupManager,
     ) {}
 
     public function getForm(): TemplateResponse {
-        $user   = $this->userSession->getUser();
-        $userId = $user ? $user->getUID() : '';
 
-        $calendarId    = $this->appConfig->getValueInt(Application::APP_ID, 'calendar_id', 33);
-        $calendarName  = $this->appConfig->getValueString(Application::APP_ID, 'calendar_name', 'Teamkalender');
-        $statsGroupRaw = $this->appConfig->getValueString(Application::APP_ID, 'stats_groups', '');
-        $statsGroups   = $statsGroupRaw !== '' ? json_decode($statsGroupRaw, true) ?? [] : [];
+        $calendarName      = $this->appConfig->getValueString(Application::APP_ID, 'calendar_name', 'Teamkalender');
+        $statsGroupRaw     = $this->appConfig->getValueString(Application::APP_ID, 'stats_groups', '');
+        $statsGroups       = $statsGroupRaw !== '' ? json_decode($statsGroupRaw, true) ?? [] : [];
+        $membersGroupRaw   = $this->appConfig->getValueString(Application::APP_ID, 'members_groups', '');
+        $membersGroups     = $membersGroupRaw !== '' ? json_decode($membersGroupRaw, true) ?? [] : [];
+        $highlightGroupRaw = $this->appConfig->getValueString(Application::APP_ID, 'highlight_groups', '');
+        $highlightGroups   = $highlightGroupRaw !== '' ? json_decode($highlightGroupRaw, true) ?? [] : [];
+
+        $calendarIdsRaw = $this->appConfig->getValueString(Application::APP_ID, 'calendar_ids', '');
+        $calendarIds    = $calendarIdsRaw !== '' ? json_decode($calendarIdsRaw, true) ?? [] : [];
+        // Fallback auf alte Einzel-ID-Einstellung
+        if (empty($calendarIds)) {
+            $oldId = $this->appConfig->getValueInt(Application::APP_ID, 'calendar_id', 0);
+            if ($oldId > 0) {
+                $calendarIds = [$oldId];
+            }
+        }
 
         // Alle Gruppen laden
         $groups = [];
@@ -43,16 +52,23 @@ class Admin implements ISettings {
         }
         usort($groups, fn($a, $b) => strcasecmp($a['displayName'], $b['displayName']));
 
-        $events = $this->calendarService->getEvents($userId, $calendarId);
-        $totals = $this->rsvpService->getTotalsPerEvent();
+        // Alle Kalender von allen Benutzern laden
+        $calendars = $this->calendarService->getAllCalendars();
+
+        // Zugriffstatistiken laden
+        $accessStats = $this->accessLogService->getStatistics();
+        $totalAccesses = $this->accessLogService->getTotalAccesses();
 
         return new TemplateResponse(Application::APP_ID, 'admin', [
-            'calendarName' => $calendarName,
-            'events'       => $events,
-            'totals'       => $totals,
-            'calendarId'   => $calendarId,
-            'statsGroups'  => $statsGroups,
-            'groups'       => $groups,
+            'calendarName'    => $calendarName,
+            'calendarIds'     => $calendarIds,
+            'statsGroups'     => $statsGroups,
+            'membersGroups'   => $membersGroups,
+            'highlightGroups' => $highlightGroups,
+            'groups'          => $groups,
+            'calendars'       => $calendars,
+            'accessStats'     => $accessStats,
+            'totalAccesses'   => $totalAccesses,
         ], 'blank');
     }
 
